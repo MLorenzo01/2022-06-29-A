@@ -5,8 +5,10 @@
 package it.polito.tdp.itunes;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 import it.polito.tdp.itunes.model.Album;
+import it.polito.tdp.itunes.model.BilancioAlbum;
 import it.polito.tdp.itunes.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -35,10 +37,10 @@ public class FXMLController {
     private Button btnPercorso; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbA1"
-    private ComboBox<?> cmbA1; // Value injected by FXMLLoader
+    private ComboBox<Album> cmbA1; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbA2"
-    private ComboBox<?> cmbA2; // Value injected by FXMLLoader
+    private ComboBox<Album> cmbA2; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtN"
     private TextField txtN; // Value injected by FXMLLoader
@@ -51,17 +53,76 @@ public class FXMLController {
 
     @FXML
     void doCalcolaAdiacenze(ActionEvent event) {
-    	
+    	Album a = cmbA1.getValue();
+    	if(a == null) {
+    		txtResult.setText("Please select an element from combo box. \n");
+    		return;
+    	}
+    	List<BilancioAlbum> bilanci = model.getAdiacenti(a);
+    	txtResult.setText("Printing successors of node " + a + ". \n" );
+    	for(BilancioAlbum b: bilanci) {
+    		txtResult.appendText(b + "\n");
+    	}
     }
 
     @FXML
     void doCalcolaPercorso(ActionEvent event) {
+    	if (!(model.getNumVertices()>0)) {
+    		txtResult.setText("Graph not created.");
+    		return;
+    	}
     	
+    	String input = txtX.getText();
+    	if(input == "") {
+    		txtResult.setText("Input string for X is empty");
+    		return;
+    	}
+    	try {
+    		int inputNum = Integer.parseInt(input);
+    		Album source = cmbA1.getValue();
+    		Album target = cmbA2.getValue();
+    		if(source == null || target == null) {
+    			txtResult.setText("Please select Album from combo box.");
+    		}
+    		List<Album> path = model.getPath(source, target, inputNum);
+    		
+    		if(path.isEmpty()) {
+    			txtResult.setText("No path between " + source + " and " + target);
+    			return;
+    		}
+    		txtResult.setText("Printing the path between " + source + " and " + target + "\n");
+    		for(Album a: path) {
+    			txtResult.appendText("" + a + "\n");
+    		}
+    		
+    	}catch(NumberFormatException e) {
+    		e.printStackTrace();
+    		txtResult.setText("Input string for N is not a valid number");
+    	}
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	String input = txtN.getText();
     	
+    	if(input == "") {
+    		txtResult.setText("Input string for N is empty");
+    	}
+    	try {
+    		int inputNum = Integer.parseInt(input);
+    		model.buildGraph(inputNum);
+    		int numV = model.getNumVertices();
+    		int numE = model.getNumEdges();
+    		txtResult.setText("Graph correctly created. \n");
+    		txtResult.appendText("Number Vertices: " + numV);
+    		txtResult.appendText("\nNumber Edges: " + numE);
+    		cmbA1.getItems().setAll(model.getVertices());
+    		cmbA2.getItems().setAll(model.getVertices());
+    		
+    	}catch(NumberFormatException e) {
+    		e.printStackTrace();
+    		txtResult.setText("Input string for N is not a valid number");
+    	}
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
